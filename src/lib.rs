@@ -170,12 +170,17 @@ where
     for y in 0..height {
         for x in 0..width {
             let pixel = img.get_pixel(x, y);
-            let (r, g, b) = match pixel {
-                image::Rgba([r, g, b, _]) => (r, g, b),
+            match pixel {
+                image::Rgba([r, g, b, a]) => {
+                    // 如果像素是透明的，输出空格
+                    if a < 128 {
+                        write!(writer, "  ")?;
+                    } else {
+                        // 使用 ANSI 真彩色转义序列 - 前景色
+                        write!(writer, "\x1b[38;2;{};{};{}m██\x1b[0m", r, g, b)?;
+                    }
+                },
             };
-            
-            // 使用 ANSI 真彩色转义序列 - 前景色
-            write!(writer, "\x1b[38;2;{};{};{}m██\x1b[0m", r, g, b)?;
         }
         writeln!(writer)?;
     }
@@ -193,15 +198,19 @@ where
     for y in 0..height {
         for x in 0..width {
             let pixel = img.get_pixel(x, y);
-            let luminance = match pixel {
-                image::Rgba([r, g, b, _]) => {
-                    // 计算亮度 (ITU-R BT.709)
-                    (0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32) as u8
+            let char = match pixel {
+                image::Rgba([r, g, b, a]) => {
+                    // 如果像素是透明的，输出空格
+                    if a < 128 {
+                        "  "
+                    } else {
+                        // 计算亮度 (ITU-R BT.709)
+                        let luminance = (0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32) as u8;
+                        // 根据亮度选择字符
+                        if luminance > 128 { "██" } else { "  " }
+                    }
                 },
             };
-            
-            // 根据亮度选择字符
-            let char = if luminance > 128 { "██" } else { "  " };
             write!(writer, "{}", char)?;
         }
         writeln!(writer)?;
@@ -220,15 +229,19 @@ where
     for y in 0..height {
         for x in 0..width {
             let pixel = img.get_pixel(x, y);
-            let luminance = match pixel {
-                image::Rgba([r, g, b, _]) => {
-                    // 计算亮度 (ITU-R BT.709)
-                    (0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32) as u8
+            let char = match pixel {
+                image::Rgba([r, g, b, a]) => {
+                    // 如果像素是透明的，输出空格
+                    if a < 128 {
+                        "  "
+                    } else {
+                        // 计算亮度 (ITU-R BT.709)
+                        let luminance = (0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32) as u8;
+                        // 反色：根据亮度选择字符，与monochrome相反
+                        if luminance > 128 { "  " } else { "██" }
+                    }
                 },
             };
-            
-            // 反色：根据亮度选择字符，与monochrome相反
-            let char = if luminance > 128 { "  " } else { "██" };
             write!(writer, "{}", char)?;
         }
         writeln!(writer)?;
@@ -313,4 +326,69 @@ fn longest_line(lines: &[&str]) -> usize {
 fn merge_white_spaces(input: &str) -> String {
     let re = Regex::new(r"([^\S\r\n])+").unwrap();
     re.replace_all(input, " ").to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use image::{Rgba, RgbaImage};
+
+    #[test]
+    fn test_transparent_pixels_in_monochrome() {
+        // 创建一个 2x2 的测试图片，包含透明和不透明像素
+        let mut img = RgbaImage::new(2, 2);
+        img.put_pixel(0, 0, Rgba([255, 255, 255, 255])); // 白色，不透明
+        img.put_pixel(1, 0, Rgba([0, 0, 0, 255]));       // 黑色，不透明
+        img.put_pixel(0, 1, Rgba([255, 255, 255, 0]));   // 白色，透明
+        img.put_pixel(1, 1, Rgba([0, 0, 0, 0]));         // 黑色，透明
+        
+        let dynamic_img = DynamicImage::ImageRgba8(img);
+        let mut output = Vec::new();
+        
+        convert_to_monochrome(&dynamic_img, &mut output).unwrap();
+        let result = String::from_utf8(output).unwrap();
+        
+        // 期望：第一行是"██  "（白色块+黑色空格），第二行是"    "（两个透明像素都是空格）
+        assert_eq!(result, "██  \n    \n");
+    }
+
+    #[test]
+    fn test_transparent_pixels_in_invert() {
+        // 创建一个 2x2 的测试图片，包含透明和不透明像素
+        let mut img = RgbaImage::new(2, 2);
+        img.put_pixel(0, 0, Rgba([255, 255, 255, 255])); // 白色，不透明
+        img.put_pixel(1, 0, Rgba([0, 0, 0, 255]));       // 黑色，不透明
+        img.put_pixel(0, 1, Rgba([255, 255, 255, 0]));   // 白色，透明
+        img.put_pixel(1, 1, Rgba([0, 0, 0, 0]));         // 黑色，透明
+        
+        let dynamic_img = DynamicImage::ImageRgba8(img);
+        let mut output = Vec::new();
+        
+        convert_to_invert(&dynamic_img, &mut output).unwrap();
+        let result = String::from_utf8(output).unwrap();
+        
+        // 期望：第一行是"  ██"（白色空格+黑色块），第二行是"    "（两个透明像素都是空格）
+        assert_eq!(result, "  ██\n    \n");
+    }
+
+    #[test]
+    fn test_transparent_pixels_in_truecolor() {
+        // 创建一个 2x2 的测试图片，包含透明和不透明像素
+        let mut img = RgbaImage::new(2, 2);
+        img.put_pixel(0, 0, Rgba([255, 0, 0, 255]));     // 红色，不透明
+        img.put_pixel(1, 0, Rgba([0, 255, 0, 255]));     // 绿色，不透明
+        img.put_pixel(0, 1, Rgba([0, 0, 255, 0]));       // 蓝色，透明
+        img.put_pixel(1, 1, Rgba([255, 255, 255, 50]));  // 白色，半透明
+        
+        let dynamic_img = DynamicImage::ImageRgba8(img);
+        let mut output = Vec::new();
+        
+        convert_to_truecolor(&dynamic_img, &mut output).unwrap();
+        let result = String::from_utf8(output).unwrap();
+        
+        // 期望：第一行有彩色块，第二行两个透明像素都是空格
+        assert!(result.contains("\x1b[38;2;255;0;0m██\x1b[0m")); // 红色块
+        assert!(result.contains("\x1b[38;2;0;255;0m██\x1b[0m")); // 绿色块
+        assert!(result.ends_with("    \n")); // 第二行全是空格
+    }
 }
