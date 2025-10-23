@@ -20,6 +20,7 @@
 
 - 🌈 **True Color Mode**: Preserves original image colors using ANSI true color escape sequences
 - ⚫ **Monochrome Mode**: Converts images to black and white blocks based on pixel luminance
+- 🔄 **Invert Mode**: Converts images to inverted black and white blocks (reverse of monochrome)
 - 📏 **Auto Scaling**: Automatically resizes large images to fit terminal display
 - 🔄 **Backward Compatible**: Maintains compatibility with original `ferris-says` functionality
 - 🖼️ **Multiple Formats**: Supports PNG, JPEG, GIF, BMP, ICO, TIFF, WebP, AVIF
@@ -50,6 +51,9 @@ fn main() {
     
     // Monochrome mode
     say_from_image("image.png", "Hello in B&W!", 40, PixelMode::Monochrome, &mut writer).unwrap();
+    
+    // Invert mode  
+    say_from_image("image.png", "Hello inverted!", 40, PixelMode::Invert, &mut writer).unwrap();
 }
 ```
 
@@ -74,6 +78,9 @@ cargo run -- image.png "Hello from pixels!"
 
 # Monochrome mode
 cargo run -- image.png "Hello in monochrome!" --monochrome
+
+# Invert mode
+cargo run -- image.png "Hello inverted!" --invert
 ```
 
 ### 🛠️ Build Requirements
@@ -103,6 +110,7 @@ This project is a playful fork of [`ferris-says`](https://github.com/rust-lang/f
 
 - 🌈 **真彩色模式**: 使用 ANSI 真彩色转义序列保持原始图片颜色
 - ⚫ **黑白模式**: 根据像素亮度将图片转换为黑白格子
+- 🔄 **反色模式**: 将图片转换为反色黑白格子（黑白颠倒）
 - 📏 **自动缩放**: 自动调整大图片尺寸以适配终端显示
 - 🔄 **向后兼容**: 保持与原始 `ferris-says` 功能的兼容性
 - 🖼️ **多格式支持**: 支持 PNG、JPEG、GIF、BMP、ICO、TIFF、WebP、AVIF
@@ -133,6 +141,9 @@ fn main() {
     
     // 黑白模式
     say_from_image("image.png", "黑白世界！", 40, PixelMode::Monochrome, &mut writer).unwrap();
+    
+    // 反色模式
+    say_from_image("image.png", "反色世界！", 40, PixelMode::Invert, &mut writer).unwrap();
 }
 ```
 
@@ -157,6 +168,9 @@ cargo run -- image.png "来自像素的问候！"
 
 # 黑白模式
 cargo run -- image.png "黑白世界！" --monochrome
+
+# 反色模式  
+cargo run -- image.png "反色世界！" --invert
 ```
 
 ### 🛠️ 构建要求

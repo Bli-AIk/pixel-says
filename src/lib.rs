@@ -15,6 +15,8 @@ pub enum PixelMode {
     TrueColor,
     /// 黑白模式，转换为黑白格子
     Monochrome,
+    /// 反色模式，黑白颠倒的黑白格子
+    Invert,
 }
 
 /// 从图片文件创建像素说话效果
@@ -154,6 +156,7 @@ where
     match mode {
         PixelMode::TrueColor => convert_to_truecolor(&resized_img, writer),
         PixelMode::Monochrome => convert_to_monochrome(&resized_img, writer),
+        PixelMode::Invert => convert_to_invert(&resized_img, writer),
     }
 }
 
@@ -199,6 +202,33 @@ where
             
             // 根据亮度选择字符
             let char = if luminance > 128 { "██" } else { "  " };
+            write!(writer, "{}", char)?;
+        }
+        writeln!(writer)?;
+    }
+    
+    Ok(())
+}
+
+/// 转换为反色模式输出
+fn convert_to_invert<W>(img: &DynamicImage, mut writer: W) -> Result<()>
+where
+    W: Write,
+{
+    let (width, height) = img.dimensions();
+    
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = img.get_pixel(x, y);
+            let luminance = match pixel {
+                image::Rgba([r, g, b, _]) => {
+                    // 计算亮度 (ITU-R BT.709)
+                    (0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32) as u8
+                },
+            };
+            
+            // 反色：根据亮度选择字符，与monochrome相反
+            let char = if luminance > 128 { "  " } else { "██" };
             write!(writer, "{}", char)?;
         }
         writeln!(writer)?;
