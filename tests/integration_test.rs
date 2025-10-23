@@ -1,4 +1,4 @@
-use ferris_says::say;
+use pixel_says::say;
 
 // Default width when running the binary
 const DEFAULT_WIDTH: usize = 40;

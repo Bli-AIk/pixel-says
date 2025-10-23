@@ -25,8 +25,8 @@ fn main() {
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
-    let args = command!("Ferris Says")
-        .about("Prints out input text with Ferris the Rustacean")
+    let args = command!("Pixel Says")
+        .about("Prints out input text with a pixel image")
         .arg(
             Arg::new("FILES")
                 .long("files")
@@ -43,6 +43,13 @@ fn run() -> Result<(), Box<dyn Error>> {
                 .default_value("40")
                 .value_parser(value_parser!(usize)),
         )
+        .arg(
+            Arg::new("IMAGE")
+                .long("image")
+                .short('i')
+                .help("Path to the pixel image file")
+                .value_parser(value_parser!(PathBuf)),
+        )
         .arg(Arg::new("TEXT").action(ArgAction::Append))
         .get_matches();
 
@@ -53,11 +60,18 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     let mut writer = BufWriter::new(stdout.lock());
 
+    // Get the image path if provided
+    let image_path = args.get_one::<PathBuf>("IMAGE");
+
     if let Some(files) = args.get_many::<PathBuf>("FILES") {
-        // Read in files and say them with Ferris
+        // Read in files and say them with the pixel image
         for f in files {
             let content = fs::read_to_string(f).map_err(|_| INPUT)?;
-            say(&content, width, &mut writer).map_err(|_| STDOUT)?;
+            if let Some(img_path) = image_path {
+                say(&content, width, img_path, &mut writer).map_err(|e| format!("Failed to display with image: {}", e))?;
+            } else {
+                say_simple(&content, width, &mut writer).map_err(|_| STDOUT)?;
+            }
         }
         Ok(())
     } else if let Some(other_args) = args.get_many::<String>("TEXT") {
@@ -65,12 +79,20 @@ fn run() -> Result<(), Box<dyn Error>> {
             .map(String::as_str)
             .collect::<Vec<&str>>()
             .join(" ");
-        say(&text, width, &mut writer).map_err(|_| STDOUT)?;
+        if let Some(img_path) = image_path {
+            say(&text, width, img_path, &mut writer).map_err(|e| format!("Failed to display with image: {}", e))?;
+        } else {
+            say_simple(&text, width, &mut writer).map_err(|_| STDOUT)?;
+        }
         Ok(())
     } else {
         let mut input = String::new();
         stdin.read_to_string(&mut input).map_err(|_| INPUT)?;
-        say(&input, width, &mut writer).map_err(|_| STDOUT)?;
+        if let Some(img_path) = image_path {
+            say(&input, width, img_path, &mut writer).map_err(|e| format!("Failed to display with image: {}", e))?;
+        } else {
+            say_simple(&input, width, &mut writer).map_err(|_| STDOUT)?;
+        }
         Ok(())
     }
 }

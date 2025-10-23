@@ -1,19 +1,19 @@
 [package]
-name = "ferris-says"
-version = "0.3.2"
+name = "pixel-says"
+version = "0.1.0"
 authors = ["Michael Gattozzi <mgattozzi@gmail.com>"]
 edition = "2021"
-description = "A Rust flavored replacement for the classic cowsay"
-documentation = "https://docs.rs/ferris-says"
-repository = "https://github.com/rust-lang/ferris-says"
+description = "A pixel image cowsay tool that converts images to terminal text with true color or monochrome support"
+documentation = "https://docs.rs/pixel-says"
+repository = "https://github.com/rust-lang/pixel-says"
 readme = "README.md"
-keywords = ["ferris", "cowsay", "print", "fsays", "rustacean"]
+keywords = ["pixel", "cowsay", "image", "terminal", "truecolor"]
 categories = [
   "text-processing",
   "visualization",
   "rendering",
   "command-line-utilities",
-  "value-formatting"
+  "multimedia::images"
 ]
 license = "MIT OR Apache-2.0"
 
@@ -25,6 +25,7 @@ regex = "1.10.4"
 smallvec = "1.11.2"
 textwrap = "0.16.0"
 unicode-width = "0.1.11"
+image = "0.25.1"
 
 [workspace]
 members = ["fsays"]

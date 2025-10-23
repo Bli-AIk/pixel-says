@@ -1,18 +1,18 @@
 [package]
-name = "fsays"
-version = "0.3.0"
+name = "psays"
+version = "0.1.0"
 authors = ["Michael Gattozzi <mgattozzi@gmail.com>"]
 edition = "2021"
-description = "A Rust flavored replacement for the classic cowsay"
-documentation = "https://docs.rs/ferris-says"
-repository = "https://github.com/rust-lang/ferris-says"
-keywords = ["ferris", "cowsay", "print", "fsays", "rustacean"]
+description = "Command line tool for pixel-says library"
+documentation = "https://docs.rs/pixel-says"
+repository = "https://github.com/rust-lang/pixel-says"
+keywords = ["pixel", "image", "cowsay", "terminal", "truecolor"]
 categories = [
   "text-processing",
   "visualization",
   "rendering",
   "command-line-utilities",
-  "value-formatting"
+  "multimedia::images"
 ]
 license = "MIT OR Apache-2.0"
 
@@ -21,3 +21,4 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 pixel-says = { version = "0.1", path = ".." }
 clap = { version = "4", features = ["cargo"] }
+anyhow = "1.0"
